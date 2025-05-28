@@ -491,6 +491,12 @@
         .modal-body::-webkit-scrollbar-thumb:hover {
             background: #9fa8da;
         }
+        .msg{display:flex;gap:8px;margin:8px 0}
+        .msg{display:flex;gap:8px;margin:8px 0}
+        .avatar{width:32px;height:32px;border-radius:50%;object-fit:cover}
+        .bubble{background:#f4f6fb;padding:8px 12px;border-radius:10px;max-width:80%}
+        .user .bubble{background:#dfe7ff}
+        .msg.user{flex-direction:row-reverse}
     </style>
 </head>
 <body>
@@ -799,26 +805,34 @@
             modal.classList.add('show');
         }
 
-        function addMessageToChat(role, content) {
-            const wrapper = document.createElement('div');
-            wrapper.className = `message-wrapper ${role === 'assistant' || role === 'model_message' ? 'message-left' : 'message-right'}`;
+        function addMessageToChat(role, raw) {
+             const who  = (role === 'assistant' || role === 'model_message') ? 'ai' : 'user';
+              const AVA  = {
+                user: 'avatar-user.png',
+                ai:   'avatar-ai.png'
+             };
+             const html = marked.parse(
+                raw
+                .replace(/-{20,}/g,'')
+                .replace(/\n+$/,'')
+            );
+            const wrap    = document.createElement('div');
+            wrap.className= `msg ${who}`;
+
+            const avat = document.createElement('img');
+            avat.src   = AVA[who];
+            avat.className = 'avatar';
+
+            const bub  = document.createElement('div');
+            bub.className = 'bubble';
+            bub.innerHTML = html;
+
+            wrap.appendChild(avat);
+            wrap.appendChild(bub);
+            chatContainer.appendChild(wrap);
+        
+
             
-            const bubble = document.createElement('div');
-            bubble.className = 'message-bubble';
-            
-            // 只在 user_message 类型的消息中移除分割线
-            const cleanContent = role === 'user_message' 
-                ? content.replace(/-{20,}/g, '')
-                : content;
-            
-            // 移除末尾的换行符
-            const trimmedContent = cleanContent.replace(/\n+$/, '');
-            
-            // 使用 marked.parse 处理 Markdown
-            bubble.innerHTML = marked.parse(trimmedContent);
-            
-            wrapper.appendChild(bubble);
-            chatContainer.appendChild(wrapper);
         }
 
         async function handleDownload() {
