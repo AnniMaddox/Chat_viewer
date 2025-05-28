@@ -494,9 +494,29 @@
         .msg{display:flex;gap:8px;margin:8px 0}
         .msg{display:flex;gap:8px;margin:8px 0}
         .avatar{width:32px;height:32px;border-radius:50%;object-fit:cover}
-        .bubble{background:#f4f6fb;padding:8px 12px;border-radius:10px;max-width:80%}
-        .user .bubble{background:#dfe7ff}
+        .bubble{
+            background:#eef1f6;  
+            border:1px solid #e0e3e9; 
+            padding:8px 12px;
+            border-radius:10px;
+            max-width:80%;
+          }
+        .user .bubble{
+            background:#dfe7ff;
+            border:1px solid #c9d5ff;
+         }   
+
         .msg.user{flex-direction:row-reverse}
+
+        .bubble{box-shadow:0 1px 2px rgba(0,0,0,.06)}
+        @media (prefers-color-scheme: dark){
+          body{background:#121212}
+          .bubble{background:#2a2d32;border-color:#404349;color:#eee}
+          .user .bubble{background:#4453a4;border-color:#5161b5}  
+
+        }  
+
+
     </style>
 </head>
 <body>
