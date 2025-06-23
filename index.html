@@ -566,6 +566,16 @@
             </div>
         </div>
 
+        <div class="format-container" style="text-align:center;margin-top:20px;">
+  <label style="display:inline-flex;align-items:center;gap:8px;font-weight:500;color:#7986cb;background:#e8eaf6;padding:8px 16px;border-radius:12px;">
+    導出格式：
+    <select id="exportFormat">
+      <option value="txt">TXT (.txt)</option>
+      <option value="json">JSON (.json)</option>
+    </select>
+  </label>
+</div>
+
         <div class="button-container">
             <button id="downloadButton" disabled>
                 <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
@@ -623,6 +633,7 @@
         const selectAll = document.getElementById('selectAll');
         const downloadButton = document.getElementById('downloadButton');
         const status = document.getElementById('status');
+        const exportFmt = document.getElementById('exportFormat');
         const modal = document.getElementById('modal');
         const modalTitle = document.getElementById('modalTitle');
         const chatContainer = document.getElementById('chatContainer');
@@ -857,49 +868,55 @@
             
         }
 
-        async function handleDownload() {
-            if (!selectedFiles.some(selected => selected)) return;
-            
-            try {
-                status.textContent = "正在准备导出...";
-                
-                const selectedOutputs = lastOutputs.filter((_, index) => selectedFiles[index]);
-                
-                if (selectedOutputs.length === 1) {
-                    // 单文件直接下载
-                    const blob = new Blob([selectedOutputs[0].content], { type: "text/plain" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = selectedOutputs[0].filename;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    status.textContent = "导出完成";
-                } else {
-                    // 多文件打包为 zip
-                    status.textContent = "正在打包文件，请稍候...";
-                    const zip = new JSZip();
-                    
-                    // 添加所有选中的文件到zip
-                    selectedOutputs.forEach(output => {
-                        zip.file(output.filename, output.content);
-                    });
-                    
-                    // 生成zip文件
-                    const content = await zip.generateAsync({type: "blob"});
-                    const url = URL.createObjectURL(content);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "chatgpt_dialogues.zip";
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    
-                    status.textContent = `已导出 ${selectedOutputs.length} 个文件到 chatgpt_dialogues.zip`;
-                }
-            } catch (err) {
-                status.textContent = "导出失败";
-            }
-        }
+        
+        async function handleDownload () {
+  const fmt = exportFmt.value;                     // "txt" or "json"
+  if (!selectedFiles.some(v => v)) return;         // 沒勾選就不做
+
+  const chosen = lastOutputs.filter((_, i) => selectedFiles[i]);
+
+  try {
+    status.textContent = '正在準備導出...';
+
+    /* ---------- 只有 1 個檔：直接下載 ---------- */
+    if (chosen.length === 1) {
+      const c   = chosen[0];
+      const data = fmt === 'txt' ? c.content : JSON.stringify(c, null, 2);
+      const blob = new Blob([data], { type: 'text/plain' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = c.filename.replace(/\.txt$/, `.${fmt}`);
+      a.click();
+      URL.revokeObjectURL(url);
+      status.textContent = '導出完成';
+    }
+
+    /* ---------- 多檔：打包 zip ---------- */
+    else {
+      status.textContent = '正在打包文件，請稍候…';
+      const zip = new JSZip();
+      chosen.forEach(c => {
+        const data = fmt === 'txt' ? c.content : JSON.stringify(c, null, 2);
+        const name = c.filename.replace(/\.txt$/, `.${fmt}`);
+        zip.file(name, data);
+      });
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = `chatgpt_dialogues_${fmt}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      status.textContent = `已導出 ${chosen.length} 個文件`;
+    }
+  } catch (err) {
+    status.textContent = '導出失敗';
+    console.error(err);
+  }
+}
+
+        
     </script>
 </body>
 </html> 
